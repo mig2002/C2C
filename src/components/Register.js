@@ -3,13 +3,14 @@ import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   
   const [userData, setUserData] = useState({
     name: "",
     email: "",
     password: "",
     role: "police",
-    identityProof: null,
   });
 
   const roles = {
@@ -21,6 +22,7 @@ const Register = () => {
   };
 
   const [roleDetails, setRoleDetails] = useState({});
+  const [identityProof, setIdentityProof] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -33,17 +35,85 @@ const Register = () => {
   };
 
   const handleFileUpload = (e) => {
-    setUserData({ ...userData, identityProof: e.target.files[0] });
+    setIdentityProof(e.target.files[0]);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("User Data:", userData);
-    console.log("Role Details:", roleDetails);
+    setIsLoading(true);
+    setError(null);
     
-    // Here, you'd send data to your backend
-    alert("Registration Successful!");
-    navigate("/");
+    try {
+      // First, we need to handle file uploads
+      const formData = new FormData();
+      
+      if (identityProof) {
+        formData.append('identityProof', identityProof);
+      }
+      
+      // Upload the file first and get the path
+      // Note: This is a simplified example. You'd need a proper file upload endpoint.
+      let identityProofPath = "";
+      
+      if (identityProof) {
+        try {
+          const uploadResponse = await fetch('http://localhost:3000/upload', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error('File upload failed');
+          }
+          
+          const uploadData = await uploadResponse.json();
+          identityProofPath = uploadData.filePath; // Assuming the server returns the file path
+        } catch (uploadError) {
+          // If upload endpoint doesn't exist during development, use a dummy path
+          console.warn('File upload failed, using dummy path for development:', uploadError);
+          identityProofPath = `/uploads/${identityProof.name}`;
+        }
+      }
+      
+      // Prepare registration data with the file path
+      const registrationData = {
+        user: {
+          name: userData.name,
+          email: userData.email,
+          password: userData.password,
+          role: userData.role,
+          status: "Pending"
+        },
+        roleDetails: {
+          ...roleDetails,
+          identityProof: identityProofPath
+        }
+      };
+      
+      // Send registration data
+      const response = await fetch('http://localhost:3000/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(registrationData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+      
+      const data = await response.json();
+      console.log("Registration successful:", data);
+      alert("Registration Successful!");
+      navigate("/login");
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const redirectToLogin = () => {
@@ -81,6 +151,18 @@ const Register = () => {
         }}
       >
         <h2 style={{ textAlign: "center", color: "#e88d7d", marginBottom: "20px", fontSize: "1.5rem" }}>Register</h2>
+
+        {error && (
+          <div style={{ 
+            padding: "10px", 
+            marginBottom: "15px", 
+            backgroundColor: "#ffebee", 
+            color: "#c62828", 
+            borderRadius: "5px" 
+          }}>
+            {error}
+          </div>
+        )}
 
         <div style={{ marginBottom: "15px" }}>
           <label style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>Name</label>
@@ -164,8 +246,16 @@ const Register = () => {
           />
         </div>
 
-        <button type="submit" style={buttonStyle}>
-          Register
+        <button 
+          type="submit" 
+          style={{
+            ...buttonStyle,
+            opacity: isLoading ? 0.7 : 1,
+            cursor: isLoading ? 'not-allowed' : 'pointer'
+          }}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Registering...' : 'Register'}
         </button>
         
         <div style={{ marginTop: "20px", textAlign: "center" }}>
@@ -181,6 +271,7 @@ const Register = () => {
               color: "#e88d7d",
               border: "1px solid #e88d7d",
             }}
+            disabled={isLoading}
           >
             Login
           </button>

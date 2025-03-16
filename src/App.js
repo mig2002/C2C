@@ -5,6 +5,7 @@ import Register from "./components/Register"; // Import Register Page
 import LoginPage from "./components/LoginPage";
 import SimpleLawyerDashboard from "./components/lawyerDashboard";
 import BailiffDashboard from "./components/bailiffs";
+import './components/styles/Dashboard.css';
 
 
 function App() {

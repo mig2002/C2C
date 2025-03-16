@@ -1,0 +1,110 @@
+/* src/styles/Dashboard.css */
+.dashboard-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #f5f2f0; /* Using the same background from login page */
+  }
+  
+ 
+
+   */
+  header h1 {
+    color: #e88d7d; /* Primary color from login page */
+  }
+  
+  .logout-btn {
+    padding: 8px 16px;
+    background-color: #e88d7d; /* Keeping the danger color */
+    color: white;
+    border: none;
+    border-radius: 5px; /* Match login page's border radius */
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s;
+  }
+  
+  .logout-btn:hover {
+    background-color: #c82333;
+  }
+  
+  .dashboard-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .section {
+    background: white; /* Matching login card background */
+    border: 1px solid #ccc; /* Using same border color from login inputs */
+    padding: 15px;
+    border-radius: 5px; /* Match login page's border radius */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Same shadow as login card */
+  }
+  
+  .section h2 {
+    margin-top: 0;
+    color: #e88d7d; /* Primary color from login page */
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  
+  .section form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .section label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #333; /* Text color from login page */
+    margin-bottom: 5px;
+    display: block;
+  }
+  
+  .section input,
+  .section select {
+    padding: 12px; /* Same padding as login inputs */
+    border: 1px solid #ccc; /* Same as login inputs */
+    border-radius: 5px; /* Match login page's border radius */
+    font-size: 1rem;
+    width: 90%;
+  }
+  
+  .section button {
+    padding: 12px;
+    background-color: #e88d7d; /* Primary color from login page */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+  }
+  
+  .section button:hover {
+    background-color: #d47c6d; /* Slightly darker version of primary */
+  }
+  
+  .section button.secondary {
+    background-color: white;
+    color: #e88d7d;
+    border: 1px solid #e88d7d;
+  }
+  
+  .section button.secondary:hover {
+    background-color: #faf0ee;
+  }
+  
+  /* Error messages */
+  .error-message {
+    background: #ffebee; /* Same as login error */
+    color: #c62828; /* Same as login error */
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 0.875rem;
+  }
