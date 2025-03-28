@@ -9,7 +9,7 @@ const VerifyCase = ({ config }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put('/bailiff/verifyCase', { caseId }, config);
+      const res = await axios.put('http://localhost:3000/user/bailiffs/verifyCase', { caseId }, config);
       setMessage(res.data.msg);
     } catch (err) {
       setMessage(err.response?.data?.msg || 'Error verifying case');

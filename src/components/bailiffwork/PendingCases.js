@@ -9,7 +9,11 @@ const PendingCases = ({ config }) => {
   const fetchPendingCases = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/bailiff/case', config);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`http://localhost:3000/user/bailiffs/case`, {
+        headers: { Authorization: token }
+      });
+      console.log(res.data.PendingCases);
       setPendingCases(res.data.pendingCases);
     } catch (err) {
       console.error(err);
@@ -30,7 +34,7 @@ const PendingCases = ({ config }) => {
       ) : (
         <ul>
           {pendingCases.map(caseItem => (
-            <li key={caseItem._id}>{caseItem._id} - {caseItem.status}</li>
+            <li key={caseItem.title}>{caseItem.title} - {caseItem.status}</li>
           ))}
         </ul>
       )}

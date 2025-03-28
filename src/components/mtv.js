@@ -24,7 +24,7 @@ const CasePaymentComponent = () => {
   // Function to create a Razorpay order
   const createOrder = async () => {
     if (!caseId || !amount) {
-      setError('Please enter both Case ID and Amount');
+      setError('Please enter both Case ID and Amount')
       return;
     }
 
@@ -38,7 +38,7 @@ const CasePaymentComponent = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/money/orderID?caseId=${caseId}&amount=${amount}`, {
+      const response = await axios.get(`http://localhost:3000/user/lawyer/transfer/money/orderID?caseId=${caseId}&amount=${amount}`, {
         headers: { Authorization: token }
       });
       
@@ -54,7 +54,7 @@ const CasePaymentComponent = () => {
   // Function to open Razorpay payment modal
   const openRazorpayModal = (orderId) => {
     const options = {
-      key: process.env.REACT_APP_RAZORPAY_KEY_ID || "YOUR_RAZORPAY_KEY_ID", // Replace with env variable
+      key: "rzp_test_uV3C0lEnqJv9ak", // Replace with env variable
       amount: parseFloat(amount) * 100, // Amount in paisa
       currency: "INR",
       name: "Judicial System",
@@ -87,14 +87,14 @@ const CasePaymentComponent = () => {
       setLoading(true);
       
       const token = localStorage.getItem('token');
-      await axios.post('/money/addTransaction', {
+      await axios.post('http://localhost:3000/user/lawyer/transfer/money/addTransaction', {
         caseId: caseId,
         amount: amount
         // No Razorpay-specific parameters since backend doesn't use them
       }, {
         headers: { Authorization: token }
       });
-      
+       
       setPaymentSuccess(true);
       setCaseId('');
       setAmount('');

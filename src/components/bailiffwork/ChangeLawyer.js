@@ -13,7 +13,7 @@ const ChangeLawyer = ({ config }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put('/bailiff/changeLawyer', formData, config);
+      const res = await axios.put('http://localhost:3000/user/bailiffs/changeLawyer', formData, config);
       setMessage(res.data.msg);
     } catch (err) {
       setMessage(err.response?.data?.msg || 'Error changing lawyer');

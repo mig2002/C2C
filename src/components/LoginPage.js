@@ -13,7 +13,7 @@ export default function LoginPage() {
   // useEffect(() => {
   //   const token = localStorage.getItem("token");
   //   const role = localStorage.getItem("role");
-    
+
   //   if (token && role) {
   //     // Redirect to appropriate dashboard if already logged in
   //     redirectBasedOnRole(role);
@@ -26,6 +26,12 @@ export default function LoginPage() {
       navigate("/lawyer-dashboard");
     } else if (role === "bailiff") {
       navigate("/bailiff-dashboard");
+    } else if (role === "police") {
+      navigate("/police-dashboard");
+    } else if (role === "judge") {
+      navigate("/judge-dashboard");
+    } else if (role === "foreinsic") {
+      navigate("/foreinsic-dashboard");
     } else {
       setError("Unknown user role");
     }
@@ -35,35 +41,41 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    
+
     try {
       // Call your authentication API
       const response = await axios.post("http://localhost:3000/login", {
         email,
-        password
+        password,
       });
-      
+
       // Log full response for debugging (remove in production)
       console.log("Login response:", response.data);
-      
+
       // Verify that response contains the expected data based on your actual API response
-      if (!response.data || !response.data.success || !response.data.jwtToken || !response.data.role) {
+      if (
+        !response.data ||
+        !response.data.success ||
+        !response.data.jwtToken ||
+        !response.data.role
+      ) {
         throw new Error("Invalid response from server");
       }
-      
+
       // Store token and role based on the actual response structure
       localStorage.setItem("token", response.data.jwtToken);
       localStorage.setItem("role", response.data.role);
-      
+
       // Store email for user identification if needed
       localStorage.setItem("email", email);
-      
+
       // Redirect based on role
       redirectBasedOnRole(response.data.role);
-      
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.response?.data?.msg || "Invalid credentials. Please try again.");
+      setError(
+        err.response?.data?.msg || "Invalid credentials. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -74,48 +86,48 @@ export default function LoginPage() {
   };
 
   return (
-    <div 
-      style={{ 
-        minHeight: "100vh", 
-        background: "#f5f2f0", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center", 
-        padding: "20px"
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f5f2f0",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
       }}
     >
-      <div 
-        style={{ 
-          background: "white", 
-          padding: "40px", 
-          borderRadius: "10px", 
-          boxShadow: "0 4px 8px rgba(0,0,0,0.1)", 
-          width: "100%", 
-          maxWidth: "400px", 
+      <div
+        style={{
+          background: "white",
+          padding: "40px",
+          borderRadius: "10px",
+          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+          width: "100%",
+          maxWidth: "400px",
           margin: "0 auto",
-          textAlign: "center"
+          textAlign: "center",
         }}
       >
-        <h2 
-          style={{ 
-            color: "#e88d7d", 
+        <h2
+          style={{
+            color: "#e88d7d",
             marginBottom: "20px",
             fontSize: "1.5rem",
-            fontWeight: "bold"
+            fontWeight: "bold",
           }}
         >
           Login
         </h2>
 
         {error && (
-          <div 
-            style={{ 
-              background: "#ffebee", 
-              color: "#c62828", 
-              padding: "10px", 
-              borderRadius: "5px", 
+          <div
+            style={{
+              background: "#ffebee",
+              color: "#c62828",
+              padding: "10px",
+              borderRadius: "5px",
               marginBottom: "15px",
-              fontSize: "0.875rem"
+              fontSize: "0.875rem",
             }}
           >
             {error}
@@ -125,14 +137,14 @@ export default function LoginPage() {
         <form onSubmit={handleLogin}>
           {/* Email Input */}
           <div style={{ marginBottom: "15px", textAlign: "left" }}>
-            <label 
-              htmlFor="email" 
-              style={{ 
-                display: "block", 
+            <label
+              htmlFor="email"
+              style={{
+                display: "block",
                 marginBottom: "5px",
                 fontSize: "0.875rem",
                 fontWeight: "500",
-                color: "#333"
+                color: "#333",
               }}
             >
               Email
@@ -148,7 +160,7 @@ export default function LoginPage() {
                 padding: "12px",
                 border: "1px solid #ccc",
                 borderRadius: "5px",
-                fontSize: "1rem"
+                fontSize: "1rem",
               }}
               required
             />
@@ -156,14 +168,14 @@ export default function LoginPage() {
 
           {/* Password Input */}
           <div style={{ marginBottom: "20px", textAlign: "left" }}>
-            <label 
-              htmlFor="password" 
-              style={{ 
-                display: "block", 
+            <label
+              htmlFor="password"
+              style={{
+                display: "block",
                 marginBottom: "5px",
                 fontSize: "0.875rem",
                 fontWeight: "500",
-                color: "#333"
+                color: "#333",
               }}
             >
               Password
@@ -179,7 +191,7 @@ export default function LoginPage() {
                 padding: "12px",
                 border: "1px solid #ccc",
                 borderRadius: "5px",
-                fontSize: "1rem"
+                fontSize: "1rem",
               }}
               required
             />
@@ -198,21 +210,27 @@ export default function LoginPage() {
               width: "100%",
               fontSize: "1rem",
               fontWeight: "500",
-              transition: "background-color 0.3s"
+              transition: "background-color 0.3s",
             }}
             disabled={isLoading}
           >
             {isLoading ? "Logging in..." : "Login"}
           </button>
-          
+
           {/* Register Section */}
           <div style={{ marginTop: "20px", textAlign: "center" }}>
-            <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "10px" }}>
+            <p
+              style={{
+                fontSize: "0.9rem",
+                color: "#666",
+                marginBottom: "10px",
+              }}
+            >
               Don't have an account?
             </p>
-            <button 
-              type="button" 
-              onClick={redirectToRegister} 
+            <button
+              type="button"
+              onClick={redirectToRegister}
               style={{
                 background: "white",
                 color: "#e88d7d",
@@ -223,7 +241,7 @@ export default function LoginPage() {
                 width: "100%",
                 fontSize: "1rem",
                 fontWeight: "500",
-                transition: "all 0.3s ease"
+                transition: "all 0.3s ease",
               }}
             >
               Register
