@@ -30,7 +30,7 @@ export default function LoginPage() {
       navigate("/police-dashboard");
     } else if (role === "judge") {
       navigate("/judge-dashboard");
-    } else if (role === "foreinsic") {
+    } else if (role === "forensic_expert") {
       navigate("/foreinsic-dashboard");
     } else {
       setError("Unknown user role");

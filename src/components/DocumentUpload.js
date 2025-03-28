@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { pinata } from "../utils/config";
 import axios from 'axios';
-import { pinata } from "../utils/config"
 
 const DocumentUploader = ({ userRole, userId, caseId }) => {
   const [file, setFile] = useState(null);
@@ -9,10 +9,8 @@ const DocumentUploader = ({ userRole, userId, caseId }) => {
   const [error, setError] = useState('');
   const [localCaseId, setLocalCaseId] = useState(caseId || '');
 
-  // Check if user has permission to upload
   const canUpload = ['lawyer', 'forensic_expert'].includes(userRole);
 
-  // Update local case ID if caseId prop changes
   useEffect(() => {
     setLocalCaseId(caseId || '');
   }, [caseId]);
@@ -30,7 +28,7 @@ const DocumentUploader = ({ userRole, userId, caseId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!file) {
       setError('Please select a file to upload');
       return;
@@ -44,43 +42,52 @@ const DocumentUploader = ({ userRole, userId, caseId }) => {
     try {
       setUploading(true);
       setError('');
-      
-      // Create form data
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('caseId', localCaseId);
 
-      const upload = await pinata.upload.public.file(file)
-      console.log(upload);
-      
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      
-      // Send request
-      const response = await axios.post('/api/documents', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
+      // 🔹 Step 1: Upload to Pinata
+      console.log('Uploading to IPFS via Pinata...');
+      const upload = await pinata.upload.public.file(file);
+      console.log('Upload response:', upload);
+
+      // Ensure we get the correct IPFS hash
+      const ipfsHash = upload.cid; // Assuming 'cid' is the correct key
+
+      // 🔹 Step 2: Send Data to Backend with JWT
+      const token = localStorage.getItem('token'); // Retrieve token
+      if (!token) {
+        throw new Error("Authentication token missing. Please log in.");
+      }
+
+      const response = await axios.post(
+        "http://localhost:3000/user/lawyer/transfer/docAdder",
+        {
+          caseId: localCaseId, // ✅ Backend expects caseId
+          cid: ipfsHash,       // ✅ Ensure correct key (backend expects 'cid')
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ Correctly formatted Authorization header
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
+      console.log('Backend Response:', response.data);
+
       setUploadResult({
         success: true,
-        message: response.data.message,
-        ipfsHash: response.data.ipfsHash,
-        txHash: response.data.txHash
+        message: response.data.message || 'File uploaded successfully',
+        ipfsHash: ipfsHash,
+        txHash: response.data.txHash || '', // Store transaction hash if available
       });
-      
-      // Reset file input
+
       setFile(null);
-      
     } catch (err) {
       console.error('Upload failed:', err);
       setUploadResult({
         success: false,
-        message: err.response?.data?.message || 'Upload failed'
+        message: err.response?.data?.message || 'Upload failed',
       });
-      setError(err.response?.data?.msg || 'Failed to upload document. Please try again.');
+      setError(err.response?.data?.message || 'Failed to upload document. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -102,26 +109,26 @@ const DocumentUploader = ({ userRole, userId, caseId }) => {
   return (
     <div className="section">
       <h2>Upload Case Document</h2>
-      
+
       {error && <div className="error-message">{error}</div>}
-      
+
       {uploadResult.success === true && (
         <div style={{ background: '#e8f5e9', color: '#2e7d32', padding: '10px', borderRadius: '5px', marginBottom: '15px' }}>
           <p>{uploadResult.message}</p>
           <p>IPFS Hash: {uploadResult.ipfsHash}</p>
-          <p>Transaction Hash: {uploadResult.txHash}</p>
+          {uploadResult.txHash && <p>Transaction Hash: {uploadResult.txHash}</p>}
         </div>
       )}
-      
+
       {uploadResult.success === false && (
         <div className="error-message">{uploadResult.message}</div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="caseId">Case ID</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             id="caseId"
             value={localCaseId}
             onChange={handleCaseIdChange}
@@ -129,11 +136,11 @@ const DocumentUploader = ({ userRole, userId, caseId }) => {
             disabled={!!caseId}
           />
         </div>
-        
+
         <div>
           <label htmlFor="documentFile">Select Document</label>
-          <input 
-            type="file" 
+          <input
+            type="file"
             id="documentFile"
             onChange={handleFileChange}
             disabled={uploading}
@@ -142,11 +149,8 @@ const DocumentUploader = ({ userRole, userId, caseId }) => {
             Maximum file size: 10MB
           </small>
         </div>
-        
-        <button 
-          type="submit" 
-          disabled={uploading || !file || !localCaseId}
-        >
+
+        <button type="submit" disabled={uploading || !file || !localCaseId}>
           {uploading ? 'Uploading...' : 'Upload Document'}
         </button>
       </form>
