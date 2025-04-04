@@ -29,7 +29,7 @@ const SimpleLawyerDashboard = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('email');
-    navigate('/login');
+    navigate('/');
   };
 
   // Fetch transactions for a case
@@ -68,7 +68,7 @@ const SimpleLawyerDashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/lawyer', {
+      await axios.post('http://localhost:3000/user/lawyer/', {
         title,
         description,
         parties,
@@ -163,7 +163,7 @@ const SimpleLawyerDashboard = () => {
                     
                     <div style={styles.infoRow}>
                       <div style={styles.label}>Amount</div>
-                      <div style={styles.value}>${transaction[7]}</div>
+                      <div style={styles.value}>Rs. {transaction[7]}</div>
                     </div>
                     
                     <div style={styles.infoRow}>

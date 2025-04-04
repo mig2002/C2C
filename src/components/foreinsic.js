@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import DocumentUploader from "./DocumentUpload";
+import { pinata } from "../utils/config";
+import axios from 'axios';
 
 const ForensicDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [cases, setCases] = useState([]);
-  const [selectedCase, setSelectedCase] = useState("");
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
   const [error, setError] = useState("");
@@ -14,76 +12,143 @@ const ForensicDashboard = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Fetch user data and cases on component mount
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!token) {
-        setIsAuthenticated(false);
-        return;
-      }
+  // Fetch user data on component mount
 
-      try {
-        // Get user profile data
-        const userResponse = await axios.get("/api/user/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (userResponse.data.success) {
-          setUserData(userResponse.data.user);
-          
-          // Fetch cases assigned to this forensic expert
-          const casesResponse = await axios.get("/api/cases/forensic", {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          
-          if (casesResponse.data.success) {
-            setCases(casesResponse.data.cases || []);
-          } else {
-            setError("Failed to load cases");
-          }
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        if (err.response?.status === 401) {
-          setIsAuthenticated(false);
-        } else {
-          setError("Failed to load dashboard data");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [token]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
-    navigate("/login");
+    navigate("/");
   };
 
-  const handleCaseChange = (e) => {
-    setSelectedCase(e.target.value);
-  };
 
-  if (!isAuthenticated) {
-    return <div>Please log in to access the dashboard</div>;
-  }
 
-  if (loading) {
+  // Document Uploader component
+  const DocumentUploader = () => {
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadResult, setUploadResult] = useState({ success: null, message: '', ipfsHash: '', txHash: '' });
+    const [uploaderError, setUploaderError] = useState('');
+    const [caseId, setCaseId] = useState('');
+
+    const userRole = userData?.role || '';
+    const canUpload = ['lawyer', 'forensic_expert'].includes(userRole);
+
+    const handleFileChange = (e) => {
+      const selectedFile = e.target.files[0];
+      if (selectedFile && selectedFile.size > 10 * 1024 * 1024) {
+        setUploaderError('File size exceeds 10MB limit');
+        setFile(null);
+      } else {
+        setUploaderError('');
+        setFile(selectedFile);
+      }
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      if (!file) {
+        setUploaderError('Please select a file to upload');
+        return;
+      }
+
+      if (!caseId) {
+        setUploaderError('Case ID is required');
+        return;
+      }
+
+      try {
+        setUploading(true);
+        setUploaderError('');
+
+        // Upload to Pinata
+        const upload = await pinata.upload.public.file(file);
+        
+        // Send to backend with CID
+        const res = await axios.post("http://localhost:3000/user/lawyer/transfer/docAdder", 
+          { 
+            caseId: caseId,
+            cid: upload.cid  // Changed from ipfsHash to cid to match backend
+          }, 
+          { 
+            headers: { Authorization: token }
+          }
+        );
+
+        setUploadResult({
+          success: true,
+          message: 'Document added successfully',
+          ipfsHash: upload.cid,
+          txHash: res.data.txHash // Get transaction hash from response
+        });
+        
+        setFile(null);
+      } catch (err) {
+        console.error('Upload failed:', err);
+        setUploadResult({
+          success: false,
+          message: err.response?.data?.message || err.message || 'Upload failed',
+        });
+        setUploaderError(err.response?.data?.msg || err.message || 'Failed to upload document. Please try again.');
+      } finally {
+        setUploading(false);
+      }
+    };
+
+  
+
     return (
-      <div className="dashboard-container" style={{ textAlign: "center", padding: "50px" }}>
-        <p>Loading dashboard...</p>
+      <div className="section">
+        <h2>Upload Case Document</h2>
+
+        {uploaderError && <div className="error-message">{uploaderError}</div>}
+
+        {uploadResult.success === true && (
+          <div style={{ background: '#e8f5e9', color: '#2e7d32', padding: '10px', borderRadius: '5px', marginBottom: '15px' }}>
+            <p>{uploadResult.message}</p>
+            <p>IPFS Hash: {uploadResult.ipfsHash}</p>
+            {uploadResult.txHash && <p>Transaction Hash: {uploadResult.txHash}</p>}
+          </div>
+        )}
+
+        {uploadResult.success === false && (
+          <div className="error-message">{uploadResult.message}</div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="caseId">Case ID</label>
+            <input
+              type="text"
+              id="caseId"
+              value={caseId}
+              onChange={(e) => setCaseId(e.target.value)}
+              placeholder="Enter Case ID"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="documentFile">Select Document</label>
+            <input
+              type="file"
+              id="documentFile"
+              onChange={handleFileChange}
+              disabled={uploading}
+            />
+            <small style={{ color: '#666', fontSize: '0.75rem' }}>
+              Maximum file size: 10MB
+            </small>
+          </div>
+
+          <button type="submit" disabled={uploading || !file || !caseId}>
+            {uploading ? 'Uploading...' : 'Upload Document'}
+          </button>
+        </form>
       </div>
     );
-  }
+  };
 
   return (
     <div className="dashboard-container">
@@ -150,116 +215,8 @@ const ForensicDashboard = () => {
         </div>
       )}
 
-      <div className="dashboard-sections" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
-        {/* Case selection section */}
-        <div 
-          className="section" 
-          style={{
-            background: "white",
-            border: "1px solid #ccc",
-            padding: "15px",
-            borderRadius: "5px",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
-          }}
-        >
-          <h2 style={{ marginTop: 0, color: "#e88d7d", fontSize: "1.2rem", fontWeight: "bold" }}>Select Case</h2>
-          <div>
-            <label htmlFor="caseSelect" style={{ fontSize: "0.875rem", fontWeight: "500", color: "#333", marginBottom: "5px", display: "block" }}>
-              Assigned Cases
-            </label>
-            <select
-              id="caseSelect"
-              value={selectedCase}
-              onChange={handleCaseChange}
-              style={{
-                padding: "12px",
-                border: "1px solid #ccc",
-                borderRadius: "5px",
-                fontSize: "1rem",
-                width: "100%",
-                marginBottom: "15px",
-              }}
-            >
-              <option value="">-- Select a case --</option>
-              {cases.length > 0 ? (
-                cases.map((caseItem) => (
-                  <option key={caseItem._id} value={caseItem._id}>
-                    {caseItem.caseNumber || caseItem.title || caseItem._id} - {caseItem.parties?.join(" vs ") || "Unknown parties"}
-                  </option>
-                ))
-              ) : (
-                <option disabled>No cases assigned</option>
-              )}
-            </select>
-          </div>
-
-          {selectedCase ? (
-            <div style={{ marginTop: "15px" }}>
-              <h3 style={{ color: "#555", fontSize: "1rem", marginBottom: "10px" }}>
-                Case Details
-              </h3>
-              {cases.find(c => c._id === selectedCase) ? (
-                <div>
-                  <p>
-                    <strong>Case Number:</strong> {cases.find(c => c._id === selectedCase).caseNumber || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Court:</strong> {cases.find(c => c._id === selectedCase).courtName || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Parties:</strong> {cases.find(c => c._id === selectedCase).parties?.join(" vs ") || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Judge:</strong> {cases.find(c => c._id === selectedCase).judge || "Not assigned"}
-                  </p>
-                </div>
-              ) : (
-                <p>Case details not available</p>
-              )}
-            </div>
-          ) : (
-            <p style={{ color: "#666", fontStyle: "italic" }}>
-              Select a case to view details and upload documents
-            </p>
-          )}
-        </div>
-
-        {/* Document uploader component */}
-        <DocumentUploader
-          userRole="forensic_expert"
-          userId={userData?._id}
-          caseId={selectedCase}
-        />
-      </div>
-
-      {/* Recent activity section */}
-      <div 
-        className="section" 
-        style={{
-          background: "white",
-          border: "1px solid #ccc",
-          padding: "15px",
-          borderRadius: "5px",
-          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-          marginTop: "20px"
-        }}
-      >
-        <h2 style={{ marginTop: 0, color: "#e88d7d", fontSize: "1.2rem", fontWeight: "bold" }}>Recent Activity</h2>
-        
-        {selectedCase ? (
-          <div>
-            <p>Your recent document uploads for this case will appear here.</p>
-            {/* Here you would typically show a list of recent document uploads */}
-            <ul style={{ paddingLeft: "20px" }}>
-              <li style={{ marginBottom: "8px", color: "#555" }}>No recent activity for this case</li>
-            </ul>
-          </div>
-        ) : (
-          <p style={{ color: "#666", fontStyle: "italic" }}>
-            Select a case to view recent activity
-          </p>
-        )}
-      </div>
+      {/* Document uploader component */}
+      <DocumentUploader />
 
       {/* Guidelines section */}
       <div 

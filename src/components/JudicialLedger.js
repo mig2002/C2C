@@ -25,7 +25,9 @@ export default function JudicialLedger() {
               flex: "1"
             }}
           />
-          <button style={{ background: "#e88d7d", color: "white", border: "none", padding: "10px 20px", borderRadius: "5px", cursor: "pointer" }}>
+          <button onClick={()=>{
+            alert("Please Login");
+          }} style={{ background: "#e88d7d", color: "white", border: "none", padding: "10px 20px", borderRadius: "5px", cursor: "pointer" }}>
             Submit
           </button>
         </div>

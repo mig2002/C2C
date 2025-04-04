@@ -12,7 +12,7 @@ const RoleUpdate = ({ config }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put('http://localhost:3000/user/bailiffs/role', formData, config);
+      const res = await axios.put('http://localhost:4000/user/bailiffs/role', formData, config);
       setMessage(res.data.msg);
     } catch (err) {
       setMessage(err.response?.data?.msg || 'Error updating role');

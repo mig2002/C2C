@@ -1,7 +1,8 @@
 import React from "react";
-import { Link } from "react-router-dom"; // Using React Router for navigation
+import { Link, Navigate } from "react-router-dom"; // Using React Router for navigation
 import { Scale, FileCheck, Shield } from "lucide-react";
 import JudicialLedger from "./JudicialLedger";
+import image from "../images/backround_image.jpg";
 
 // Reusable Button Component
 const Button = ({ children, onClick, variant, to }) => {
@@ -19,6 +20,8 @@ const Button = ({ children, onClick, variant, to }) => {
       border: "none",
       cursor: "pointer",
     },
+
+
   };
 
   return to ? (
@@ -36,12 +39,12 @@ export default function HomePage() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f2f0", padding: "20px" }}>
       <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", background: "white" }}>
-        <div style={{ background: "gray", padding: "10px 20px", borderRadius: "5px" }}>LOGO</div>
+        <div style={{ background: "#e88d7d", padding: "10px 20px", borderRadius: "5px" }}>C2C</div>
         <div style={{ display: "flex", gap: "15px" }}>
           <Link to="/" style={{ textDecoration: "none", color: "black" }}>HOME</Link>
           <Link to="/about" style={{ textDecoration: "none", color: "black" }}>ABOUT</Link>
           <Link to="/contact" style={{ textDecoration: "none", color: "black" }}>CONTACT</Link>
-          <Button variant="outline" to="/register">REGISTER</Button> {/* Register Page Link */}
+          <Button variant="outline" to="/register"   >REGISTER</Button> {/* Register Page Link */}
           <Button variant="outline" to="/login">LOGIN</Button>
         </div>
       </nav>
@@ -52,19 +55,19 @@ export default function HomePage() {
           <p style={{ color: "gray" }}>
             Introducing a secure, blockchain-based system to modernize and protect judicial processes. With tamper-proof, decentralized storage for deposits and forensic reports, we enhance transparency, integrity, and reliability.
           </p>
-          <Button variant="default">Learn More</Button>
+          <Button to="/about"  variant="default">Learn More</Button>
         </div>
         <div>
-          <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-3HHNoMD6CHgemY47gq31tMdBXQt1Ht.png" alt="Lady Justice Statue" style={{ width: "400px", height: "auto" }} />
+          <img src={image} alt="Lady Justice Statue" style={{ width: "600px", height: "auto" ,borderRadius:"10px" ,border: "5px solid #e88d7d"} }/>
         </div>
       </section>
 
       
 
       {/* Benefits Section */}
-      <section style={{ padding: "40px 20px", background: "white", borderRadius: "20px" }}>
+      <section style={{ padding: "40px 20px", background: "white", borderRadius: "20px", }}>
         <h2 style={{ textAlign: "center", color: "#e88d7d" }}>Core Benefits</h2>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", justifyContent: "space-between"}}>
           {[
             { Icon: Scale, title: "Immutable Judicial Deposits Ledger", text: "Our blockchain-based ledger offers tamper-proof tracking of judicial deposits." },
             { Icon: FileCheck, title: "Secure Forensic Report Management", text: "Forensic reports are stored with blockchain-verified access." },
@@ -82,9 +85,5 @@ export default function HomePage() {
       <JudicialLedger />
 
     </div>
-    // <div>
-    //   {/* <LawyerDashboard/> */}
-    //   <BailiffDashboard/>
-    // </div>
   );
 }

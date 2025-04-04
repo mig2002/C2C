@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { pinata } from "../utils/config";
 import axios from 'axios';
 
-const DocumentUploader = ({ userRole, userId, caseId }) => {
+const DocumentUploader = ({ userRole, caseId, token }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState({ success: null, message: '', ipfsHash: '', txHash: '' });
@@ -15,7 +15,7 @@ const DocumentUploader = ({ userRole, userId, caseId }) => {
     setLocalCaseId(caseId || '');
   }, [caseId]);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile && selectedFile.size > 10 * 1024 * 1024) {
       setError('File size exceeds 10MB limit');
@@ -43,51 +43,41 @@ const DocumentUploader = ({ userRole, userId, caseId }) => {
       setUploading(true);
       setError('');
 
-      // 🔹 Step 1: Upload to Pinata
-      console.log('Uploading to IPFS via Pinata...');
+      // Step 1: Upload to Pinata to get cid
       const upload = await pinata.upload.public.file(file);
-      console.log('Upload response:', upload);
-
-      // Ensure we get the correct IPFS hash
-      const ipfsHash = upload.cid; // Assuming 'cid' is the correct key
-
-      // 🔹 Step 2: Send Data to Backend with JWT
-      const token = localStorage.getItem('token'); // Retrieve token
-      if (!token) {
-        throw new Error("Authentication token missing. Please log in.");
-      }
-
-      const response = await axios.post(
-        "http://localhost:3000/user/lawyer/transfer/docAdder",
-        {
-          caseId: localCaseId, // ✅ Backend expects caseId
-          cid: ipfsHash,       // ✅ Ensure correct key (backend expects 'cid')
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // ✅ Correctly formatted Authorization header
-            "Content-Type": "application/json",
-          },
+      const ipfsHash = upload.cid;
+      
+      // Step 2: Send the cid and caseId to the backend
+      const res = await axios.post(
+        "http://localhost:3000/user/lawyer/transfer/docAdder", 
+        { 
+          caseId: localCaseId,
+          cid: ipfsHash
+        }, 
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+          }
         }
       );
-
-      console.log('Backend Response:', response.data);
-
+      
+      // Step 3: Update UI with results
       setUploadResult({
         success: true,
-        message: response.data.message || 'File uploaded successfully',
+        message: res.data.message || 'Document added successfully',
         ipfsHash: ipfsHash,
-        txHash: response.data.txHash || '', // Store transaction hash if available
+        txHash: res.data.txHash || '',
       });
 
+      // Reset file input
       setFile(null);
     } catch (err) {
       console.error('Upload failed:', err);
       setUploadResult({
         success: false,
-        message: err.response?.data?.message || 'Upload failed',
+        message: err.response?.data?.message || err.message || 'Upload failed',
       });
-      setError(err.response?.data?.message || 'Failed to upload document. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Failed to upload document. Please try again.');
     } finally {
       setUploading(false);
     }

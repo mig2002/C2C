@@ -13,7 +13,7 @@ const PoliceDashboard = () => {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
     // Use navigate instead of window.location.href
-    navigate("/login");
+    navigate("/");
   };
 
   if (!isAuthenticated) {

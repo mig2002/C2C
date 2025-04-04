@@ -22,7 +22,7 @@ const BailiffDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
-    navigate("/login");
+    navigate("/");
   };
 
   // Render active component based on selected section
