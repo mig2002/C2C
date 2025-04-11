@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import 'C:/Webdev/C2C/src/components/styles/PinataUploader.css';
+import "./styles/PinataUploader.css"
 
 const PinataUploader = () => {
   // State variables
