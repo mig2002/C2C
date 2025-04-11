@@ -9,6 +9,8 @@ import JudgesDashboard from "./components/judges";
 import PoliceDashboard from "./components/police";
 import ForeinsicDashboard from "./components/foreinsic";
 import './components/styles/Dashboard.css';
+import PinataUploader from "./components/PinataUploader";
+import IPFSFileRetriever from "./components/IPFSFileRetriever";
 
 
 function App() {
@@ -23,7 +25,8 @@ function App() {
         <Route path="/foreinsic-dashboard" element={<ForeinsicDashboard/>}/>
         <Route path="/judge-dashboard" element={<JudgesDashboard/>}/>
         <Route path="/police-dashboard" element={<PoliceDashboard/>}/>
-
+        <Route path="/pinata" element={<PinataUploader/>}/>
+        <Route path="/fetchp" element={<IPFSFileRetriever/>}/>
       </Routes>
     </Router>
   );
